@@ -20,6 +20,8 @@ from ms3.commands import (
     ListBucketResponse, ListBucketVersionsResponse,
     VersioningConfigurationResponse, CopyObjectResponse)
 
+define("address", default="0.0.0.0", type=str, metavar="ADDRESS",
+       help="Address on which we run this server")
 define("port", default=9009, type=int, metavar="PORT",
        help="Port on which we run this server (usually https port)")
 define("internal_ssl", default=False, type=bool, metavar="True|False",
@@ -314,10 +316,10 @@ def run(args=None):
 
     http_server = tornado.httpserver.HTTPServer(app, xheaders=True,
                                                 ssl_options=ssl_options)
-    http_server.listen(options.port)
+    http_server.listen(options.port, address=options.address)
     _logger.info("Using configuration file %s", options.config)
     _logger.info("Using data directory %s", app.datadir)
-    _logger.info("Starting up on port %s", options.port)
+    _logger.info("Starting up on %s port %s", options.address, options.port)
     instance = tornado.ioloop.IOLoop().instance()
     instance.start()
 
