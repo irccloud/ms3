@@ -204,7 +204,7 @@ class ObjectHandler(BaseHandler):
                 _logger.warn("Not accepting 0 bytes files")
                 self.set_header('ETag', '"%s"' % hashlib.md5("").hexdigest())
         else:
-            entry = bucket.set_entry(key, self.request.body)
+            entry = bucket.set_entry(key, self.request.body, headers=self.request.headers)
             self.set_header('ETag', '"%s"' % entry.etag)
 
     def head(self, name, key):

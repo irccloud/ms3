@@ -100,6 +100,9 @@ class Entry(AWSObject):
 
 class BucketEntry(Entry):
     """ Represents an object (key) in AWS terminology """
+
+    HEADERS = ".headers"
+
     @property
     def etag(self):
         with open(self.complete_path, "r") as fp:
@@ -109,7 +112,20 @@ class BucketEntry(Entry):
         stat = super(BucketEntry, self)._complete_metadata()
         self.size = stat.st_size
         self.modified_at = stat.st_mtime
+        header_path = os.path.join(self.base_path, self.name + self.HEADERS)
+        self._parse_headers(header_path)
         return stat
+
+    def _parse_headers(self, path):
+        if not os.path.exists(path):
+            return
+        self.headers = {}
+        with open(path, "r") as fp:
+            for line in fp:
+                args = line.split("=", 1)
+                if len(args) < 2:
+                    continue
+                self.headers[args[0]] = args[1].strip()
 
     def read(self):
         with open(os.path.join(self.base_path, self.name), "rb") as fp:
@@ -137,9 +153,15 @@ class BucketEntry(Entry):
         return result
 
     def set_headers(self, handler):
-        handler.set_header('Last-Modified', httpdate(self.created_at))
-        handler.set_header('Access-Control-Allow-Origin', '*')
-        handler.set_header('Access-Control-Allow-Headers', '*')
+        headers = {
+            'Last-Modified': httpdate(self.created_at),
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': '*',
+        }
+        if self.headers:
+            headers.update(self.headers)
+        for k, v in headers.items():
+            handler.set_header(k, v)
 
 
 def is_more_recent(entryA, entryB):
@@ -174,6 +196,9 @@ class Bucket(Entry):
 
     METADATA = "metadata"
     METADATA_PROPS = ["versioned"]
+    HEADERS  = ".headers"
+    HEADER_PROPS = ["content-type"]
+    HEADER_PREFIX = "x-amz-meta"
 
     def __init__(self, name, base_path):
         super(Bucket, self).__init__(name, base_path)
@@ -243,18 +268,26 @@ class Bucket(Entry):
         except (IOError, OSError):
             return None
 
-    def set_entry(self, key, value):
+    def set_entry(self, key, value, headers={}):
         if self.versioned:
             key = "%s.%.6f" % (key, time.time())
         entry_path = os.path.join(self.complete_path, key)
         make_entry_dir(entry_path)
         with open(entry_path, "w") as fp:
             fp.write(value)
+
+        if headers:
+            header_path = entry_path + self.HEADERS
+            with open(header_path, "w") as fp:
+                for k, v in headers.items():
+                    if k.lower() in self.HEADER_PROPS or k.lower().startswith(self.HEADER_PREFIX):
+                        fp.write("%s=%s\n" % (k, v))
+
         return BucketEntry(key, self.complete_path)
 
-    def copy_entry(self, key, src_entry):
+    def copy_entry(self, key, src_entry, headers={}):
         # print "Copy at %.6f" % time.time(), "=>", key
-        return self.set_entry(key, src_entry.read())
+        return self.set_entry(key, src_entry.read(), headers=headers)
 
     def delete_entry(self, key, version_id=None):
         if self.versioned:
