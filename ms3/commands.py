@@ -117,9 +117,9 @@ class BucketEntry(Entry):
         return stat
 
     def _parse_headers(self, path):
+        self.headers = {}
         if not os.path.exists(path):
             return
-        self.headers = {}
         with open(path, "r") as fp:
             for line in fp:
                 args = line.split("=", 1)
