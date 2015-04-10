@@ -300,7 +300,9 @@ class Bucket(Entry):
                 key = "%s.%s" % (key, version_id)
 
         entry_path = os.path.join(self.complete_path, key)
+        header_path = os.path.join(self.complete_path, key + self.HEADERS)
         remove_entry_dir(entry_path)
+        remove_entry_dir(header_path)
 
     def list(self, prefix=None):
         results = {}
