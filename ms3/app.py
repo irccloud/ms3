@@ -213,6 +213,7 @@ class ObjectHandler(BaseHandler):
         version_id = self.get_argument("versionId", None)
         bucket = self.get_bucket(name)
         if not bucket:
+            self.send_error(404)
             return
         entry = bucket.get_entry(key, version_id=version_id)
         if not entry:
