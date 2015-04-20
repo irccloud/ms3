@@ -119,7 +119,11 @@ class BucketHandler(BaseHandler):
         self.render_xml(result)
 
     def head(self, name):
-        self.set_status(200)
+        bucket = self.get_bucket(name)
+        if not bucket:
+            return
+        else:
+            self.set_status(200)
 
     def put(self, name):
         if self.has_section("versioning"):
@@ -213,7 +217,6 @@ class ObjectHandler(BaseHandler):
         version_id = self.get_argument("versionId", None)
         bucket = self.get_bucket(name)
         if not bucket:
-            self.send_error(404)
             return
         entry = bucket.get_entry(key, version_id=version_id)
         if not entry:
