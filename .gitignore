@@ -25,3 +25,10 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+debian/files
+debian/irccloud-ms3/
+debian/*.postinst.debhelper
+debian/debhelper.log
+debian/*.substvars
+

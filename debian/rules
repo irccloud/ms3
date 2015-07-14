@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+export RELEASE_VERSION=$(shell dpkg-parsechangelog -SVersion)
+
+%:
+	dh $@ --with python-virtualenv
+
+override_dh_virtualenv:
+	dh_virtualenv --no-test
+
+.PHONY: override_dh_virtualenv
