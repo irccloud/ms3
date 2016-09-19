@@ -202,7 +202,7 @@ class ObjectHandler(BaseHandler):
                                  " for %s/%s", source_name, key_name)
                     self.send_error(404)
                     return
-                entry = bucket.copy_entry(key, entry)
+                entry = bucket.copy_entry(key, entry, entry.headers)
                 if entry:
                     response = CopyObjectResponse(entry)
                     self.render_xml(response)
